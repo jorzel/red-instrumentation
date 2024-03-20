@@ -1,0 +1,37 @@
+version: "3.7"
+
+services:
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - target: 9090
+        published: 9090
+    volumes:
+      - type: bind
+        source: ./prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+      - ./prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  grafana:
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/dashboard.json
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    image: grafana/grafana:latest
+    ports:
+      - target: 3000
+        published: 3000
+      
+
+  weather-app:
+    image: weather-app:v0
+    ports:
+      - target: 8000
+        published: 8080
