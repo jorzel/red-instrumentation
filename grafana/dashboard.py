@@ -2,66 +2,51 @@ import json
 import os
 
 from grafanalib.prometheus import PromGraph
-from grafanalib.core import Dashboard, Row, Graph, Target, OPS_FORMAT, single_y_axis
+from grafanalib.core import (
+    Dashboard, Row, Graph, Target, Histogram, OPS_FORMAT, single_y_axis, YAxes,
+    YAxis, MILLISECONDS_FORMAT, SHORT_FORMAT,
+)
 from grafanalib._gen import DashboardEncoder
 
-prom_panel = PromGraph(
-    title="Prom HTTP Requests",
-    data_source='prometheus',
-    expressions=[
-        ('requests', 'rate(http_request_duration_count[5m])'),
-        ('server errors (5xx)', 'rate(http_request_duration_count{code=~"5.."}[5m])'),
-        ('user errors (4xx)', 'rate(http_request_duration_count{code=~"4.."}[5m])'),
 
-    ],
-    yAxes=single_y_axis(format=OPS_FORMAT),
-)
-
-red_panel = Graph(
-    title="HTTP Requests",
-    dataSource='prometheus',
-    targets=[
-        Target(
-            expr='rate(http_request_duration_count[5m])',
-            legendFormat="{{path}} {{method}} {{code}}",
-            refId='A',
-        ),
-    ],
-    yAxes=single_y_axis(format=OPS_FORMAT),
-)
-
-# # Define queries for each RED metric
-# rate_query = TimeSeries(
-#     title="Requests",
-#     dataSource='prometheus',
-#     targets=[
-#         Target(
-#             expr='rate(http_request_duration_count[5m])',
-#             legendFormat="Rate",
-#             refId='A',
-#         ),
-#     ],
-#     unit=OPS_FORMAT,
-#     gridPos=GridPos(h=8, w=16, x=0, y=10),
-# ),
+def duration_panel(metric, title='Response times', y_axes_format=MILLISECONDS_FORMAT):
+    return PromGraph(
+        title=title,
+        data_source='prometheus',
+        expressions=[
+            ('p99', f'histogram_quantile(0.99, sum(rate({metric}_bucket[1m])) by (le))'),
+            ('p90', f'histogram_quantile(0.90, sum(rate({metric}_bucket[1m])) by (le))'),
+            ('p50', f'histogram_quantile(0.5, sum(rate({metric}_bucket[1m])) by (le))'),
+        ],
+        yAxes=single_y_axis(format=y_axes_format),
+    )
 
 
-# # Create a RED panel
-# red_panel = Graph(
-#     title='RED Panel',
-#     dataSource='Prometheus',
-#     targets=[rate_query],
-#     yAxes=[
-#         YAxis(format=OPS_FORMAT),
-#         YAxis(format=SHORT_FORMAT),
-#     ],
-#     gridPos=GridPos(h=8, w=24, x=0, y=0)
-# )
+def requests_panel(metric, title="Requests", y_axes_format=OPS_FORMAT, legend_format="{{path}} {{method}} {{code}}"):
+    return Graph(
+        title=title,
+        dataSource='prometheus',
+        targets=[
+            Target(
+                expr=f'rate({metric}_count[1m])',
+                legendFormat=legend_format,
+                refId='A',
+            ),
+        ],
+        yAxes=single_y_axis(format=y_axes_format),
+    )
+
+
+http_requests_duration = duration_panel("http_request_duration", "HTTP Requests Response Times") 
+http_requests = requests_panel("http_request_duration", "HTTP Requests")
+
 
 # Create a dashboard containing the RED panel
 dashboard = Dashboard(
-    title='RED service instrumenation',
-    rows=[Row(panels=[red_panel]), Row(panels=[prom_panel])],
+    title='Service instrumenation',
+    rows=[
+        Row(title="RED - HTTP", panels=[http_requests, http_requests_duration]),
+    ],
     refresh='10s',
 ).auto_panel_ids()
 

@@ -82,13 +82,13 @@
           "repeat": null,
           "repeatDirection": null,
           "seriesOverrides": [],
-          "span": 12,
+          "span": 6,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
               "datasource": null,
-              "expr": "rate(http_request_duration_count[5m])",
+              "expr": "rate(http_request_duration_count[1m])",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -96,7 +96,7 @@
               "intervalFactor": 2,
               "legendFormat": "{{path}} {{method}} {{code}}",
               "metric": "",
-              "query": "rate(http_request_duration_count[5m])",
+              "query": "rate(http_request_duration_count[1m])",
               "refId": "A",
               "step": 10,
               "target": ""
@@ -145,17 +145,7 @@
             "align": false,
             "alignLevel": 0
           }
-        }
-      ],
-      "repeat": null,
-      "showTitle": false,
-      "title": "New row"
-    },
-    {
-      "collapse": false,
-      "editable": true,
-      "height": "250px",
-      "panels": [
+        },
         {
           "aliasColors": {},
           "bars": false,
@@ -220,51 +210,51 @@
           "repeat": null,
           "repeatDirection": null,
           "seriesOverrides": [],
-          "span": 12,
+          "span": 6,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
               "datasource": null,
-              "expr": "rate(http_request_duration_count[5m])",
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "format": "time_series",
               "hide": false,
               "instant": false,
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "requests",
+              "legendFormat": "p99",
               "metric": "",
-              "query": "rate(http_request_duration_count[5m])",
+              "query": "histogram_quantile(0.99, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "refId": "A",
               "step": 10,
               "target": ""
             },
             {
               "datasource": null,
-              "expr": "rate(http_request_duration_count{code=~\"5..\"}[5m])",
+              "expr": "histogram_quantile(0.90, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "format": "time_series",
               "hide": false,
               "instant": false,
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "server errors (5xx)",
+              "legendFormat": "p90",
               "metric": "",
-              "query": "rate(http_request_duration_count{code=~\"5..\"}[5m])",
+              "query": "histogram_quantile(0.90, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "refId": "B",
               "step": 10,
               "target": ""
             },
             {
               "datasource": null,
-              "expr": "rate(http_request_duration_count{code=~\"4..\"}[5m])",
+              "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "format": "time_series",
               "hide": false,
               "instant": false,
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "user errors (4xx)",
+              "legendFormat": "p50",
               "metric": "",
-              "query": "rate(http_request_duration_count{code=~\"4..\"}[5m])",
+              "query": "histogram_quantile(0.5, sum(rate(http_request_duration_bucket[1m])) by (le))",
               "refId": "C",
               "step": 10,
               "target": ""
@@ -273,7 +263,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Prom HTTP Requests",
+          "title": "HTTP Requests Response Times",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -292,7 +282,7 @@
           "yaxes": [
             {
               "decimals": null,
-              "format": "ops",
+              "format": "ms",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -316,8 +306,8 @@
         }
       ],
       "repeat": null,
-      "showTitle": false,
-      "title": "New row"
+      "showTitle": true,
+      "title": "RED - HTTP"
     }
   ],
   "schemaVersion": 12,
@@ -359,7 +349,7 @@
     ]
   },
   "timezone": "utc",
-  "title": "RED service instrumenation",
+  "title": "Service instrumenation",
   "uid": null,
   "version": 0
 }
