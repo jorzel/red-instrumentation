@@ -6,7 +6,7 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ["localhost:9090"]
-  - job_name: "weather-app"
+  - job_name: "myapp"
     scrape_interval: 5s
     static_configs:
-      - targets: ["weather-app:8000"]
+      - targets: ["myapp:8000"]

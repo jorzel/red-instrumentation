@@ -22,7 +22,22 @@ def duration_panel(metric, title='Response times', y_axes_format=MILLISECONDS_FO
     )
 
 
-def requests_panel(metric, title="Requests", y_axes_format=OPS_FORMAT, legend_format="{{path}} {{method}} {{code}}"):
+def http_requests_panel(metric, title="Requests", y_axes_format=OPS_FORMAT, legend_format="{{path}} {{method}} {{code}}"):
+    return Graph(
+        title=title,
+        dataSource='prometheus',
+        targets=[
+            Target(
+                expr=f'rate({metric}_count[1m])',
+                legendFormat=legend_format,
+                refId='A',
+            ),
+        ],
+        yAxes=single_y_axis(format=y_axes_format),
+    )
+
+
+def redis_requests_panel(metric, title="Requests", y_axes_format=OPS_FORMAT, legend_format="{{operation}} {{status}}"):
     return Graph(
         title=title,
         dataSource='prometheus',
@@ -38,7 +53,10 @@ def requests_panel(metric, title="Requests", y_axes_format=OPS_FORMAT, legend_fo
 
 
 http_requests_duration = duration_panel("http_request_duration", "HTTP Requests Response Times") 
-http_requests = requests_panel("http_request_duration", "HTTP Requests")
+http_requests = http_requests_panel("http_request_duration", "HTTP Requests")
+
+redis_calls_duration = duration_panel("redis_call_duration", "Redis Call Response Times")
+redis_calls = redis_requests_panel("redis_call_duration", "Redis Calls")
 
 
 # Create a dashboard containing the RED panel
@@ -46,6 +64,7 @@ dashboard = Dashboard(
     title='Service instrumenation',
     rows=[
         Row(title="RED - HTTP", panels=[http_requests, http_requests_duration]),
+        Row(title="RED - Redis", panels=[redis_calls, redis_calls_duration]),
     ],
     refresh='10s',
 ).auto_panel_ids()
